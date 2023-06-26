@@ -6,7 +6,7 @@ async function main(blockId: string) {
   const block = await logseq.Editor.getBlock(blockId, {
     includeChildren: true,
   });
-  if (block === null || block.children?.length === 0) {
+  if (block === null) {
     return;
   }
 
@@ -16,10 +16,10 @@ async function main(blockId: string) {
 
   let newBlockContent = "";
   if (!pageRegx.test(firstLine)) {
-    newBlockContent = block.content.replace(firstLine, `[[${firstLine}]]`);
+    newBlockContent = `[[${firstLine}]]`;
   }
 
-  await createPageIfNotExist(pageName);
+  await createPageIfNotExist(pageName, block.properties);
 
   const srcBlock = await getLastBlock(pageName);
   if (srcBlock) {
@@ -68,17 +68,16 @@ logseq
   })
   .catch(console.error);
 
-async function createPageIfNotExist(pageName: string) {
+async function createPageIfNotExist(
+  pageName: string,
+  properties: Record<string, any> | undefined
+) {
   let page = await logseq.Editor.getPage(pageName);
   if (!page) {
-    await logseq.Editor.createPage(
-      pageName,
-      {},
-      {
-        createFirstBlock: true,
-        redirect: false,
-      }
-    );
+    await logseq.Editor.createPage(pageName, properties, {
+      createFirstBlock: true,
+      redirect: false,
+    });
   } else {
     debug("page already exist");
     const lastBlock = await getLastBlock(pageName);

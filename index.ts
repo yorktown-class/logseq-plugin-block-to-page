@@ -11,16 +11,16 @@ async function main(blockId: string) {
   }
 
   const pageRegx = /^\[\[(.*)\]\]$/;
+  const embedRegx = /^{{embed \[\[(.*)\]\]}}$/;
   const firstLine = block.content.split("\n")[0].trim();
-  const pageName = firstLine.replace(pageRegx, "$1");
+  
+  if (embedRegx.test(firstLine)) return;
 
-  let newBlockContent = "";
-  if (!pageRegx.test(firstLine)) {
-    newBlockContent = block.content.replace(
-      firstLine,
-      `{{embed [[${firstLine}]]}}`
-    );
-  }
+  const pageName = (await logseq.Editor.getPage(block.page.id))?.name + "/" + firstLine.replace(pageRegx, "$1");
+  const newBlockContent = block.content.replace(
+    firstLine,
+    `{{embed [[${pageName}]]}}`
+  );
 
   await createPageIfNotExist(pageName, block.properties);
 
